@@ -27,45 +27,45 @@ import requests
 
 def _load_api_key() -> str:
     """
-    Carga la API key desde un archivo secrets.json local.
-    Asume que el archivo está en el directorio raíz del proyecto.
+    Loads the API key from a local secrets.json file.
+    Assumes the file is in the project root directory.
     """
     try:
         with open("secrets.json", "r") as f:
             secrets = json.load(f)
         return secrets
     except FileNotFoundError:
-        raise FileNotFoundError("El archivo 'secrets.json' no se encontró. Asegúrate de que exista en el directorio raíz.")
+        raise FileNotFoundError("The 'secrets.json' file was not found. Make sure it exists in the root directory.")
     except KeyError:
-        raise KeyError("La clave 'openroute_api_key' no se encontró en secrets.json.")
+        raise KeyError("The 'openroute_api_key' key was not found in secrets.json.")
 
 
 def get_client():
     return OpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key=_load_api_key()['openroute_api_key'],  # Carga la key desde el archivo JSON
+        api_key=_load_api_key()['openroute_api_key'],  # Load the key from the JSON file
     )
 
 
 class ModelsData:
     """
-    Clase para gestionar respuestas de modelos OpenRouter compatibles con OpenAI.
-    Usa el patrón Factory Method para seleccionar el modelo.
+    Class to manage responses from OpenRouter models compatible with OpenAI.
+    Uses the Factory Method pattern to select the model.
     """
     def __init__(self):
         secrets = _load_api_key()
         self.api_key = secrets['openroute_api_key']
         self.client = get_client()
         self.extra_headers = {
-            "HTTP-Referer": "https://tuapp.streamlit.app",  # Opcional
-            "X-Title": "Mi Streamlit App",  # Opcional
+            "HTTP-Referer": "https://tuapp.streamlit.app",  # Optional
+            "X-Title": "My Streamlit App",  # Optional
         }
         self.extra_body = {}
 
     def get_response(self, message: str, model_name: str, system_message: str = None) -> str:
         """
-        Factory Method para obtener la respuesta de un modelo dado su nombre.
-        Permite incluir un mensaje de sistema (system prompt) si se proporciona.
+        Factory Method to get the response from a model given its name.
+        Allows including a system message (system prompt) if provided.
         """
         model_methods = {
             "deepseek_v3": self.deepseek_v3,
@@ -76,12 +76,12 @@ class ModelsData:
         }
         method = model_methods.get(model_name)
         if not method:
-            return f"[Modelo '{model_name}' no soportado]"
+            return f"[Model '{model_name}' not supported]"
         return method(message, system_message=system_message) if model_name == "gemini_flash" else method(message, system_message) if system_message else method(message)
 
     def deepseek_v3(self, message: str, system_message: str = None) -> str:
         """
-        Envía un mensaje a DeepSeek Chat v3 (deepseek/deepseek-chat-v3-0324:free).
+        Sends a message to DeepSeek Chat v3 (deepseek/deepseek-chat-v3-0324:free).
         """
         try:
             messages = []
@@ -96,11 +96,11 @@ class ModelsData:
             )
             return completion.choices[0].message.content
         except Exception as e:
-            return f"[Error al contactar a DeepSeek Chat v3: {e}]"
+            return f"[Error contacting DeepSeek Chat v3: {e}]"
 
     def kimi(self, message: str, system_message: str = None) -> str:
         """
-        Envía un mensaje a Kimi (moonshotai/kimi-k2:free).
+        Sends a message to Kimi (moonshotai/kimi-k2:free).
         """
         try:
             messages = []
@@ -115,13 +115,13 @@ class ModelsData:
             )
             return completion.choices[0].message.content
         except Exception as e:
-            return f"[Error al contactar a Kimi: {e}]"
+            return f"[Error contacting Kimi: {e}]"
 
     def gemini_flash(self, message: str, image_url: str = None, system_message: str = None) -> str:
         """
-        Envía un mensaje a Gemini 2.0 Flash (google/gemini-2.0-flash-exp:free).
-        Si image_url se proporciona, envía texto e imagen; si no, solo texto.
-        Si system_message se proporciona, lo envía como mensaje de sistema.
+        Sends a message to Gemini 2.0 Flash (google/gemini-2.0-flash-exp:free).
+        If image_url is provided, sends text and image; if not, only text.
+        If system_message is provided, sends it as a system message.
         """
         try:
             content = []
@@ -150,11 +150,11 @@ class ModelsData:
             )
             return completion.choices[0].message.content
         except Exception as e:
-            return f"[Error al contactar a Gemini 2.0 Flash: {e}]"
+            return f"[Error contacting Gemini 2.0 Flash: {e}]"
 
     def qwq_32b(self, message: str, system_message: str = None) -> str:
         """
-        Envía un mensaje a Qwen QWQ-32B (qwen/qwq-32b:free).
+        Sends a message to Qwen QWQ-32B (qwen/qwq-32b:free).
         """
         try:
             messages = []
@@ -169,11 +169,11 @@ class ModelsData:
             )
             return completion.choices[0].message.content
         except Exception as e:
-            return f"[Error al contactar a Qwen QWQ-32B: {e}]"
+            return f"[Error contacting Qwen QWQ-32B: {e}]"
 
     def mistral_nemo(self, message: str, system_message: str = None) -> str:
         """
-        Envía un mensaje a Mistral Nemo (mistralai/mistral-nemo:free).
+        Sends a message to Mistral Nemo (mistralai/mistral-nemo:free).
         """
         try:
             messages = []
@@ -188,5 +188,5 @@ class ModelsData:
             )
             return completion.choices[0].message.content
         except Exception as e:
-            return f"[Error al contactar a Mistral Nemo: {e}]"
+            return f"[Error contacting Mistral Nemo: {e}]"
 
